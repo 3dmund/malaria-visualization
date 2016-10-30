@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <title>WebGL Globe</title>
+    <meta charset="utf-8">
+    <link type="text/css" rel="stylesheet" href="style.css"/>
+    </style>
+  </head>
+  <body>
+
+  <div id="container"></div>
+
+  <div id="info">
+    <strong><a href="http://www.chromeexperiments.com/globe">WebGL Globe</a target="_blank"></strong> 
+    <span class="bull">&bull;</span>
+    </span> Created by Edmund Tian | <a href="http://edmundtian.com/" target="_blank">edmundtian.com</a>
+    <span class="bull">&bull;</span> Using code from the Google Data Arts Team <span class="bull">&bull;</span> 
+    Data acquired from <a href="https://data.unicef.org/topic/child-health/malaria/" target="_blank">WHO</a>
+  </div>
+
+  <div id="currentInfo">
+    <span id="year1990" class="year">all</span>
+    <!-- <span id="year1995" class="year">1995</span>
+    <span id="year2000" class="year">2000</span> -->
+  </div>
+
+  <div id="title" class="block">
+    Malaria mortality among children under five in 2015
+  </div>
+
+  <div id="total" class="block">
+    Total deaths: <span id="numDeaths">306,371</span>
+  </div>
+
+  <div id="learnMore" class="block">
+    Learn more:
+    <a href="https://www.cdc.gov/malaria/">www.cdc.gov/malaria/</a>
+    <a href="https://www.youtube.com/watch?v=Jt5u1lX9yZI" target="_blank">www.youtube.com/watch...</a>
+  </div>
+
+  <div id="makeDif" class="block">
+    Make a difference:
+    <a href="https://www.malarianomore.org/" target="_blank">www.malarianomore.org/</a><br>
+    <a href="http://www.nothingbutnets.net/" target="_blank">www.nothingbutnets.net/</a><br>
+
+  </div>
+
+  <a id="ce" href="http://www.chromeexperiments.com/globe" target="_blank">
+    <span>This is a Chrome Experiment</span>
+  </a>
+
+  <script type="text/javascript" src="third-party/Detector.js"></script>
+  <script type="text/javascript" src="third-party/three.min.js"></script>
+  <script type="text/javascript" src="third-party/Tween.js"></script>
+  <script type="text/javascript" src="globe.js"></script>
+  <script type="text/javascript">
+
+    if(!Detector.webgl){
+      Detector.addGetWebGLMessage();
+    } else {
+
+      var years = ['1990'];
+      var container = document.getElementById('container');
+      var globe = new DAT.Globe(container);
+
+      console.log(globe);
+      var i, tweens = [];
+      
+      var settime = function(globe, t) {
+        return function() {
+          new TWEEN.Tween(globe).to({time: t/years.length},500).easing(TWEEN.Easing.Cubic.EaseOut).start();
+          var y = document.getElementById('year'+years[t]);
+          if (y.getAttribute('class') === 'year active') {
+            return;
+          }
+          var yy = document.getElementsByClassName('year');
+          for(i=0; i<yy.length; i++) {
+            yy[i].setAttribute('class','year');
+          }
+          y.setAttribute('class', 'year active');
+        };
+      };
+      
+      for(var i = 0; i<years.length; i++) {
+        var y = document.getElementById('year'+years[i]);
+        y.addEventListener('mouseover', settime(globe,i), false);
+      }
+      
+      var xhr;
+      TWEEN.start();
+      
+      
+      xhr = new XMLHttpRequest();
+      xhr.open('GET', 'data.json', true);
+      xhr.onreadystatechange = function(e) {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            var data = JSON.parse(xhr.responseText);
+            window.data = data;
+            for (i=0;i<data.length;i++) {
+              globe.addData(data[i][1], {format: 'magnitude', name: data[i][0], animated: true});
+            }
+            globe.createPoints();
+            settime(globe,0)();
+            globe.animate();
+            document.body.style.backgroundImage = 'none'; // remove loading
+          }
+        }
+      };
+      xhr.send(null);
+    }
+
+  </script>
+
+  </body>
+
+</html>
